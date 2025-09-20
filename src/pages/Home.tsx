@@ -26,8 +26,8 @@ const Home = () => {
             </h1>
             
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Upload a photo of your meal and let our advanced computer vision model identify multiple foods 
-              and calculate their nutritional information instantly.
+              Use your live camera to detect food in real-time and instantly get detailed calorie information. 
+              Our advanced deep learning model can detect multiple foods simultaneously.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -37,11 +37,7 @@ const Home = () => {
                   Start Detection
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" asChild className="text-lg px-8">
-                <Link to="/about">
-                  Learn More
-                </Link>
-              </Button>
+              
             </div>
           </div>
         </div>
@@ -116,9 +112,9 @@ const Home = () => {
               <div className="h-16 w-16 bg-gradient-to-br from-primary to-primary-glow rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-bold">
                 1
               </div>
-              <h3 className="text-xl font-semibold mb-2">Upload Image</h3>
+              <h3 className="text-xl font-semibold mb-2">Multi Food Detection</h3>
               <p className="text-muted-foreground">
-                Take a photo or upload an image of your meal
+                Take a photo of your meal
               </p>
             </div>
             
@@ -157,7 +153,7 @@ const Home = () => {
           <Button size="lg" asChild className="text-lg px-8">
             <Link to="/detect">
               <Upload className="mr-2 h-5 w-5" />
-              Upload Your Image
+              Scan Your Food
             </Link>
           </Button>
         </div>
