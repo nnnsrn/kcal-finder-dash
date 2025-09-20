@@ -1,40 +1,66 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Camera, Loader2, Image as ImageIcon } from "lucide-react";
+import { Camera, Loader2, Video, Square } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/layout/Layout";
 
 const Detection = () => {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isStreamActive, setIsStreamActive] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please select an image smaller than 10MB",
-          variant: "destructive",
-        });
-        return;
+  const startCamera = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { width: 640, height: 480 } 
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setIsStreamActive(true);
       }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setSelectedImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+    } catch (error) {
+      toast({
+        title: "Camera Error",
+        description: "Unable to access camera. Please check permissions.",
+        variant: "destructive",
+      });
     }
-  };
+  }, [toast]);
+
+  const stopCamera = useCallback(() => {
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+      setIsStreamActive(false);
+    }
+  }, []);
+
+  const captureImage = useCallback(() => {
+    if (videoRef.current && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0);
+        const imageData = canvas.toDataURL('image/jpeg');
+        setCapturedImage(imageData);
+        stopCamera();
+      }
+    }
+  }, [stopCamera]);
 
   const handleAnalyze = () => {
-    if (!selectedImage) return;
+    if (!capturedImage) return;
     
     setIsAnalyzing(true);
     
@@ -44,34 +70,16 @@ const Detection = () => {
       // Navigate to results page with the image data
       navigate('/results', { 
         state: { 
-          imageData: selectedImage,
+          imageData: capturedImage,
           analysisComplete: true 
         }
       });
     }, 3000);
   };
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      const file = files[0];
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setSelectedImage(e.target?.result as string);
-        };
-        reader.readAsDataURL(file);
-      }
-    }
+  const retakePhoto = () => {
+    setCapturedImage(null);
+    startCamera();
   };
 
   return (
@@ -81,89 +89,98 @@ const Detection = () => {
           <div className="text-center mb-10">
             <h1 className="text-4xl font-bold mb-4">Food Detection</h1>
             <p className="text-xl text-muted-foreground">
-              Upload an image to analyze food items and get calorie information
+              Use your camera to capture food images and get calorie analysis
             </p>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-8">
-            {/* Upload Section */}
+            {/* Camera Section */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <ImageIcon className="h-5 w-5" />
-                  Upload Image
+                  <Camera className="h-5 w-5" />
+                  Camera Feed
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div 
-                  className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
-                  onClick={handleUploadClick}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                >
-                  {selectedImage ? (
-                    <div className="space-y-4">
+                <div className="space-y-4">
+                  <div className="relative bg-muted rounded-lg overflow-hidden" style={{ aspectRatio: '4/3' }}>
+                    {capturedImage ? (
                       <img 
-                        src={selectedImage} 
-                        alt="Selected food" 
-                        className="max-w-full h-64 object-contain mx-auto rounded-lg"
+                        src={capturedImage} 
+                        alt="Captured food" 
+                        className="w-full h-full object-cover"
                       />
+                    ) : (
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        muted
+                        className="w-full h-full object-cover"
+                        style={{ display: isStreamActive ? 'block' : 'none' }}
+                      />
+                    )}
+                    
+                    {!isStreamActive && !capturedImage && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-center space-y-4">
+                          <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                            <Video className="h-8 w-8 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">Camera Preview</p>
+                            <p className="text-sm text-muted-foreground">
+                              Start camera to preview
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <canvas ref={canvasRef} className="hidden" />
+                  
+                  <div className="flex gap-2">
+                    {!isStreamActive && !capturedImage && (
                       <Button 
-                        variant="outline" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedImage(null);
-                        }}
+                        onClick={startCamera}
+                        className="flex-1"
                       >
-                        Choose Different Image
+                        <Camera className="mr-2 h-4 w-4" />
+                        Start Camera
                       </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                        <Upload className="h-8 w-8 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-lg font-medium">Drop your image here</p>
-                        <p className="text-sm text-muted-foreground">
-                          or click to browse (max 10MB)
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                
-                <div className="flex gap-2 mt-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={handleUploadClick}
-                    className="flex-1"
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Browse Files
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => {
-                      // In a real app, this would open camera
-                      toast({
-                        title: "Camera feature",
-                        description: "Camera capture would be implemented here",
-                      });
-                    }}
-                  >
-                    <Camera className="mr-2 h-4 w-4" />
-                    Use Camera
-                  </Button>
+                    )}
+                    
+                    {isStreamActive && (
+                      <>
+                        <Button 
+                          onClick={captureImage}
+                          className="flex-1"
+                        >
+                          <Square className="mr-2 h-4 w-4" />
+                          Capture Photo
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          onClick={stopCamera}
+                          className="flex-1"
+                        >
+                          Stop Camera
+                        </Button>
+                      </>
+                    )}
+                    
+                    {capturedImage && (
+                      <Button 
+                        variant="outline"
+                        onClick={retakePhoto}
+                        className="flex-1"
+                      >
+                        <Camera className="mr-2 h-4 w-4" />
+                        Retake Photo
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -187,31 +204,31 @@ const Detection = () => {
                         <div>
                           <p className="font-medium">Analyzing your image...</p>
                           <p className="text-sm text-muted-foreground">
-                            Running deep learning model
+                            Running YOLO detection model
                           </p>
                         </div>
                       </div>
-                    ) : selectedImage ? (
+                    ) : capturedImage ? (
                       <div className="space-y-4">
-                        <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                          <ImageIcon className="h-8 w-8 text-green-600" />
+                        <div className="h-16 w-16 bg-secondary/20 rounded-full flex items-center justify-center mx-auto">
+                          <Camera className="h-8 w-8 text-secondary" />
                         </div>
                         <div>
-                          <p className="font-medium">Image ready for analysis</p>
+                          <p className="font-medium">Photo captured successfully</p>
                           <p className="text-sm text-muted-foreground">
-                            Click analyze to detect food items
+                            Ready to analyze food items
                           </p>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-4">
                         <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto">
-                          <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                          <Camera className="h-8 w-8 text-muted-foreground" />
                         </div>
                         <div>
-                          <p className="font-medium text-muted-foreground">No image selected</p>
+                          <p className="font-medium text-muted-foreground">No photo captured</p>
                           <p className="text-sm text-muted-foreground">
-                            Upload an image to start analysis
+                            Capture a photo to start analysis
                           </p>
                         </div>
                       </div>
@@ -220,7 +237,7 @@ const Detection = () => {
 
                   <Button 
                     onClick={handleAnalyze}
-                    disabled={!selectedImage || isAnalyzing}
+                    disabled={!capturedImage || isAnalyzing}
                     className="w-full"
                     size="lg"
                   >
@@ -238,9 +255,9 @@ const Detection = () => {
                   </Button>
 
                   <div className="text-xs text-muted-foreground space-y-1">
-                    <p>• Supports JPG, PNG, WebP formats</p>
-                    <p>• Best results with clear, well-lit images</p>
+                    <p>• Works best with clear, well-lit photos</p>
                     <p>• Multiple food items can be detected</p>
+                    <p>• Real-time YOLO model processing</p>
                   </div>
                 </div>
               </CardContent>

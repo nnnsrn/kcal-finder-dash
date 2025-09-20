@@ -37,12 +37,12 @@ const Header = () => {
             Detection
           </Link>
           <Link 
-            to="/about" 
+            to="/calculator" 
             className={`text-sm font-medium transition-colors hover:text-primary ${
-              isActive('/about') ? 'text-primary' : 'text-muted-foreground'
+              isActive('/calculator') ? 'text-primary' : 'text-muted-foreground'
             }`}
           >
-            About
+            Calculator
           </Link>
         </nav>
         

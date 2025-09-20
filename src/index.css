@@ -8,30 +8,30 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 225 15% 15%;
+    --background: 50 100% 98%;
+    --foreground: 213 67% 16%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 225 15% 15%;
+    --card: 50 100% 98%;
+    --card-foreground: 213 67% 16%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 225 15% 15%;
+    --popover: 50 100% 98%;
+    --popover-foreground: 213 67% 16%;
 
-    /* Health Green Primary */
-    --primary: 158 64% 52%;
+    /* Teal Primary */
+    --primary: 168 57% 41%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 158 64% 62%;
+    --primary-glow: 168 57% 51%;
 
-    /* Tech Blue Secondary */
-    --secondary: 217 91% 60%;
-    --secondary-foreground: 0 0% 100%;
+    /* Light Green Secondary */
+    --secondary: 150 36% 63%;
+    --secondary-foreground: 213 67% 16%;
 
     /* Soft backgrounds */
-    --muted: 210 40% 98%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 150 20% 90%;
+    --muted-foreground: 213 30% 45%;
 
-    /* Energy Orange Accent */
-    --accent: 43 96% 56%;
+    /* Pink Accent */
+    --accent: 338 86% 68%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -71,26 +71,26 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 225 15% 9%;
-    --foreground: 210 40% 98%;
+    --background: 213 67% 16%;
+    --foreground: 50 100% 98%;
 
-    --card: 225 15% 11%;
-    --card-foreground: 210 40% 98%;
+    --card: 213 50% 20%;
+    --card-foreground: 50 100% 98%;
 
-    --popover: 225 15% 11%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 213 50% 20%;
+    --popover-foreground: 50 100% 98%;
 
-    --primary: 158 64% 52%;
+    --primary: 168 57% 41%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 158 64% 62%;
+    --primary-glow: 168 57% 51%;
 
-    --secondary: 217 91% 60%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 150 36% 63%;
+    --secondary-foreground: 213 67% 16%;
 
-    --muted: 225 15% 15%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 213 30% 25%;
+    --muted-foreground: 150 20% 70%;
 
-    --accent: 43 96% 56%;
+    --accent: 338 86% 68%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 63% 31%;
